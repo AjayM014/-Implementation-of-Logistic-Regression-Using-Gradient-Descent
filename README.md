@@ -8,102 +8,136 @@ To write a program to implement the the Logistic Regression Using Gradient Desce
 2. Anaconda – Python 3.7 Installation / Jupyter notebook
 
 ## Algorithm
-```
-1. Start the program.
-2. Data preprocessing:
-3. cCleanse data,handle missing values,encode categorical variables.
-4. Model Training:Fit logistic regression model on preprocessed data.
-5. Model Evaluation:Assess model performance using metrics like accuracyprecisioon,recall.
-6. Prediction: Predict placement status for new student data using trained model.
-7. End the program.
-``` 
+1. Import the required libraries.
+2. Load the dataset.
+3. Define X and Y array.
+4. Define a function for costFunction,cost and gradient.
+5. Define a function to plot the decision boundary. 6.Define a function to predict the 
+   Regression value.
 
 ## Program:
 ```
 /*
 Program to implement the the Logistic Regression Using Gradient Descent.
 Developed by: AJAY M
-RegisterNumber: 212223040009
+RegisterNumber:  212223040009
 */
 ```
-```
-import pandas as pd
+```C
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy import optimize
 
-# Load and preprocess the data
-data = pd.read_csv(r"C:\Users\admin\.conda\KABE\Placement_Data (2).csv")
-data1 = data.drop(['sl_no', 'salary'], axis=1)
+data=np.loadtxt("ex2data1.txt",delimiter=',')
+X=data[:,[0,1]]
+y=data[:,2]
 
-from sklearn.preprocessing import LabelEncoder
-le = LabelEncoder()
-data1["gender"] = le.fit_transform(data1["gender"])
-data1["ssc_b"] = le.fit_transform(data1["ssc_b"])
-data1["hsc_b"] = le.fit_transform(data1["hsc_b"])
-data1["hsc_s"] = le.fit_transform(data1["hsc_s"])
-data1["degree_t"] = le.fit_transform(data1["degree_t"])
-data1["workex"] = le.fit_transform(data1["workex"])
-data1["specialisation"] = le.fit_transform(data1["specialisation"])
-data1["status"] = le.fit_transform(data1["status"])
+X[:5]
 
-# Split features and target
-X = data1.iloc[:, :-1].values  # Features
-Y = data1["status"].values  # Target variable
+y[:5]
 
-# Feature Scaling
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
-X = scaler.fit_transform(X)
+plt.figure()
+plt.scatter(X[y==1][:,0],X[y==1][:,1],label="Admitted")
+plt.scatter(X[y==0][:,0],X[y==0][:,1],label="Not Admitted")
+plt.xlabel("Exam 1 score")
+plt.ylabel("Exam 2 score")
+plt.legend()
+plt.show()
 
-# Initialize parameters
-theta = np.random.randn(X.shape[1])  # Random initialization
-alpha = 0.01  # Learning rate
-num_iterations = 1000  # Number of iterations
-
-# Define sigmoid function
 def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
+    return 1/(1+np.exp(-z))
 
-# Define loss function
-def loss(theta, X, y):
-    h = sigmoid(X.dot(theta))
-    return -np.sum(y * np.log(h + 1e-15) + (1 - y) * np.log(1 - h + 1e-15)) / len(y)
+plt.plot()
+X_plot=np.linspace(-10,10,100)
+plt.plot(X_plot,sigmoid(X_plot))
+plt.show()
 
-# Gradient Descent function
-def gradient_descent(theta, X, y, alpha, num_iterations):
-    m = len(y)
-    for i in range(num_iterations):
-        h = sigmoid(X.dot(theta))
-        gradient = X.T.dot(h - y) / m
-        theta -= alpha * gradient
-    return theta
+def costFunction (theta,X,y):
+    h=sigmoid(np.dot(X,theta))
+    J=-(np.dot(y,np.log(h))+np.dot(1-y,np.log(1-h)))/X.shape[0]
+    grad=np.dot(X.T,h-y)/X.shape[0]
+    return J,grad
 
-# Train the model
-theta = gradient_descent(theta, X, Y, alpha, num_iterations)
+X_train=np.hstack((np.ones((X.shape[0],1)),X))
+theta=np.array([0,0,0])
+J,grad=costFunction(theta,X_train,y)
+print(J)
+print(grad)
 
-# Prediction function
-def predict(theta, X):
-    h = sigmoid(X.dot(theta))
-    return np.where(h >= 0.5, 1, 0)
+X_train=np.hstack((np.ones((X.shape[0],1)),X))
+theta=np.array([-24,0.2,0.2])
+J,grad=costFunction(theta,X_train,y)
+print(J)
+print(grad)
 
-# Model evaluation
-y_pred = predict(theta, X)
-accuracy = np.mean(y_pred == Y)
+def cost (theta,X,y):
+    h=sigmoid(np.dot(X,theta))
+    J=-(np.dot(y,np.log(h))+np.dot(1-y,np.log(1-h)))/X.shape[0]
+    return J
 
-# Display Results
-print("Accuracy:", accuracy)
-print("\nPredicted:\n", y_pred)
-print("\nActual:\n", Y)
+def gradient (theta,X,y):
+    h=sigmoid(np.dot(X,theta))
+    grad=np.dot(X.T,h-y)/X.shape[0]
+    return grad
 
-# Predictions for new data
-xnew = np.array([[0, 87, 0, 95, 0, 2, 78, 2, 0, 0, 1, 0]])  # Example input
-xnew = scaler.transform(xnew)  # Apply same scaling as training data
-y_prednew = predict(theta, xnew)
-print("\nPredicted Result:", y_prednew)
+X_train=np.hstack((np.ones((X.shape[0],1)),X))
+theta=np.array([0,0,0])
+res=optimize.minimize(fun=cost,x0=theta,args=(X_train,y),method='Newton-CG',jac=gradient)
+print(res.fun)
+print(res.x)
+
+def plotDecisionBoundary(theta,X,y):
+    x_min,x_max=X[:,0].min()-1,X[:,0].max()+1
+    y_min,y_max=X[:,1].min()-1,X[:,1].max()+1
+    xx,yy=np.meshgrid(np.arange(x_min,x_max,0.1),np.arange(y_min,y_max,0.1))
+    X_plot=np.c_[xx.ravel(),yy.ravel()]
+    X_plot=np.hstack((np.ones((X_plot.shape[0],1)),X_plot))
+    y_plot=np.dot(X_plot,theta).reshape(xx.shape)
+    
+    plt.figure()
+    plt.scatter(X[y==1][:,0],X[y==1][:,1],label="Admitted")
+    plt.scatter(X[y==0][:,0],X[y==0][:,1],label="Not Admitted")
+    plt.contour(xx,yy,y_plot,levels=[0])
+    plt.xlabel("Exam 1 score")
+    plt.ylabel("Exam 2 score")
+    plt.legend()
+    plt.show()
+
+
+plotDecisionBoundary(res.x,X,y)
+
+prob=sigmoid(np.dot(np.array([1,45,85]),res.x))
+print(prob)
+
+def predict(theta,X):
+    X_train =np.hstack((np.ones((X.shape[0],1)),X))
+    prob=sigmoid(np.dot(X_train,theta))
+    return (prob>=0.5).astype(int)
+np.mean(predict(res.x,X)==y)
 ```
 
 ## Output:
-![op1](image.png)
+## Array Value of x:
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/568d375a-5c86-452c-8d04-64478d0a9b55)
+## Array Value of y:
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/78802893-6ba6-4e11-b26c-e41286082de8)
+## Exam 1 - Score graph:
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/719ea21e-fa9b-4870-a117-10148dc4e8af)
+## Sigmoid function graph:
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/cd29378d-ce2e-4f16-982b-462d0918e1ca)
+## X_train_grad value
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/67db93b6-a0d3-4648-994a-a9472c16ac3e)
+## Y_train_grad value
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/49890060-4244-428c-897f-7ced09888055)
+## Print res.x
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/6b006a88-d712-499b-a3e6-a2ce6657a9c8)
+## Decision boundary - graph for exam score
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/37eb36f7-56e5-480a-b710-9bf1f12e478a)
+## Probability value:
+![image](https://github.com/user-attachments/assets/a4f14cfd-e1a6-4142-807d-ec6e1aad49ff)
 
+## Prediction value of mean
+![image](https://github.com/rakshithaprakashkumar11/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/150994181/856ba580-e232-482a-9ba6-055e452cde58)
 ## Result:
 Thus the program to implement the the Logistic Regression Using Gradient Descent is written and verified using python programming.
 
